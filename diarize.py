@@ -1,30 +1,32 @@
 import argparse
+import logging
 import os
+import re
+
+import torch
+import torchaudio
+from ctc_forced_aligner import (
+    generate_emissions,
+    get_alignments,
+    get_spans,
+    load_alignment_model,
+    postprocess_results,
+    preprocess_text,
+)
+from deepmultilingualpunctuation import PunctuationModel
+from nemo.collections.asr.models.msdd_models import NeuralDiarizer
+
 from helpers import (
-    whisper_langs,
-    langs_to_iso,
-    punct_model_langs,
+    cleanup,
     create_config,
-    get_words_speaker_mapping,
     get_realigned_ws_mapping_with_punctuation,
     get_sentences_speaker_mapping,
     get_speaker_aware_transcript,
+    get_words_speaker_mapping,
+    langs_to_iso,
+    punct_model_langs,
+    whisper_langs,
     write_srt,
-    cleanup,
-)
-import torch
-import torchaudio
-from nemo.collections.asr.models.msdd_models import NeuralDiarizer
-from deepmultilingualpunctuation import PunctuationModel
-import re
-import logging
-from ctc_forced_aligner import (
-    load_alignment_model,
-    generate_emissions,
-    preprocess_text,
-    get_alignments,
-    get_spans,
-    postprocess_results,
 )
 from transcription_helpers import transcribe_batched
 
@@ -178,7 +180,7 @@ tokens_starred, text_starred = preprocess_text(
     language=langs_to_iso[language],
 )
 
-segments, blank_id = get_alignments(
+segments, scores, blank_id = get_alignments(
     emissions,
     tokens_starred,
     alignment_dictionary,
@@ -186,7 +188,7 @@ segments, blank_id = get_alignments(
 
 spans = get_spans(tokens_starred, segments, alignment_tokenizer.decode(blank_id))
 
-word_timestamps = postprocess_results(text_starred, spans, stride)
+word_timestamps = postprocess_results(text_starred, spans, stride, scores)
 
 
 # convert audio to mono for NeMo combatibility
