@@ -117,30 +117,6 @@ else:
 
 # Transcribe the audio file
 
-<<<<<<< HEAD
-    whisper_results, language = transcribe_batched(
-        vocal_target,
-        args.language,
-        args.batch_size,
-        args.model_name,
-        mtypes[args.device],
-        args.suppress_numerals,
-        args.device,
-        args.prompt,
-    )
-else:
-    from transcription_helpers import transcribe
-
-    whisper_results, language = transcribe(
-        vocal_target,
-        args.language,
-        args.model_name,
-        mtypes[args.device],
-        args.suppress_numerals,
-        args.device,
-        args.prompt,
-    )
-=======
 whisper_results, language, audio_waveform = transcribe_batched(
     vocal_target,
     args.language,
@@ -156,7 +132,6 @@ alignment_model, alignment_tokenizer, alignment_dictionary = load_alignment_mode
     args.device,
     dtype=torch.float16 if args.device == "cuda" else torch.float32,
 )
->>>>>>> upstream/main
 
 audio_waveform = (
     torch.from_numpy(audio_waveform)
