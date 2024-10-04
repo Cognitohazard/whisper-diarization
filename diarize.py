@@ -24,6 +24,7 @@ from helpers import (
     get_speaker_aware_transcript,
     get_words_speaker_mapping,
     langs_to_iso,
+    process_language_arg,
     punct_model_langs,
     whisper_langs,
     write_srt,
@@ -93,6 +94,7 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+language = process_language_arg(args.language, args.model_name)
 
 if args.stemming:
     # Isolate vocals from the rest of the audio
@@ -121,7 +123,7 @@ else:
 
 whisper_results, language, audio_waveform = transcribe_batched(
     vocal_target,
-    args.language,
+    language,
     args.batch_size,
     args.model_name,
     mtypes[args.device],
@@ -155,13 +157,13 @@ tokens_starred, text_starred = preprocess_text(
     language=langs_to_iso[language],
 )
 
-segments, scores, blank_id = get_alignments(
+segments, scores, blank_token = get_alignments(
     emissions,
     tokens_starred,
     alignment_tokenizer,
 )
 
-spans = get_spans(tokens_starred, segments, alignment_tokenizer.decode(blank_id))
+spans = get_spans(tokens_starred, segments, blank_token)
 
 word_timestamps = postprocess_results(text_starred, spans, stride, scores)
 
